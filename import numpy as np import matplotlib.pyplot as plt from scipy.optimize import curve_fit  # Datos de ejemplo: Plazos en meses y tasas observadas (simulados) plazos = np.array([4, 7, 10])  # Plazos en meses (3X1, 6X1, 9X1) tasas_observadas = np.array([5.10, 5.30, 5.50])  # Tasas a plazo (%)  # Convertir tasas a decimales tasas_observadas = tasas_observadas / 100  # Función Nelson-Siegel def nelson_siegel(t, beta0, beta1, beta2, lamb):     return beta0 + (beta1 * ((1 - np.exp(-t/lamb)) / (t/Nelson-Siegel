@@ -1,0 +1,39 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+
+# Datos de ejemplo: Plazos en meses y tasas observadas (simulados)
+plazos = np.array([4, 7, 10])  # Plazos en meses (3X1, 6X1, 9X1)
+tasas_observadas = np.array([5.10, 5.30, 5.50])  # Tasas a plazo (%)
+
+# Convertir tasas a decimales
+tasas_observadas = tasas_observadas / 100
+
+# Función Nelson-Siegel
+def nelson_siegel(t, beta0, beta1, beta2, lamb):
+    return beta0 + (beta1 * ((1 - np.exp(-t/lamb)) / (t/lamb))) + (beta2 * (((1 - np.exp(-t/lamb)) / (t/lamb)) - np.exp(-t/lamb)))
+
+# Ajuste del modelo a los datos
+params, _ = curve_fit(nelson_siegel, plazos, tasas_observadas, maxfev=10000)
+
+# Parámetros ajustados
+beta0, beta1, beta2, lamb = params
+print(f"Parámetros ajustados:\nNivel (beta0): {beta0:.4f}\nPendiente (beta1): {beta1:.4f}\nCurvatura (beta2): {beta2:.4f}\nLambda: {lamb:.4f}")
+
+# Proyección de la curva de tasas
+plazos_proyeccion = np.linspace(1, 12, 100)  # Proyección de 1 a 12 meses
+tasas_proyectadas = nelson_siegel(plazos_proyeccion, *params)
+
+# Gráfica de la curva ajustada
+plt.figure(figsize=(10, 6))
+plt.plot(plazos_proyeccion, tasas_proyectadas * 100, label='Curva Ajustada Nelson-Siegel', color='blue')
+plt.scatter(plazos, tasas_observadas * 100, color='red', label='Tasas Observadas')
+plt.xlabel('Plazos (Meses)')
+plt.ylabel('Tasa (%)')
+plt.title('Ajuste de la Curva de TIIE con Nelson-Siegel')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+
